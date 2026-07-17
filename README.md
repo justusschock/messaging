@@ -11,7 +11,7 @@ Configure the Go toolchain for the private `justusschock` organization and authe
 ```bash
 go env -w GOPRIVATE='github.com/justusschock/*'
 go env -w GONOSUMDB='github.com/justusschock/*'
-go get github.com/justusschock/go-messaging@v0.1.0
+go get github.com/justusschock/go-messaging@main
 ```
 
 The only non-standard-library dependency is [`github.com/justusschock/go-concurrency`](https://github.com/justusschock/go-concurrency) `v0.2.0`, used to bound parallel fan-out.
