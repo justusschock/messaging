@@ -20,7 +20,7 @@ func Run(t *testing.T, factory Factory) {
 		defer cleanup()
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	type result struct {
 		envelope messaging.Envelope[string]
@@ -59,9 +59,6 @@ func Run(t *testing.T, factory Factory) {
 	}
 	ticker := time.NewTicker(10 * time.Millisecond)
 	defer ticker.Stop()
-	deadline := time.NewTimer(time.Second)
-	defer deadline.Stop()
-
 	for {
 		if err := publisher.Publish(ctx, envelope); err != nil {
 			t.Fatalf("Publish: %v", err)
@@ -90,8 +87,8 @@ func Run(t *testing.T, factory Factory) {
 		case err := <-subscribed:
 			t.Fatalf("Subscribe returned before delivery: %v", err)
 		case <-ticker.C:
-		case <-deadline.C:
-			t.Fatal("delivery timed out")
+		case <-ctx.Done():
+			t.Fatalf("delivery timed out: %v", context.Cause(ctx))
 		}
 	}
 }
