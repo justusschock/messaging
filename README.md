@@ -2,7 +2,7 @@
 
 `go-messaging` provides typed, transport-neutral messaging contracts and small composition helpers for Go. It includes immutable envelopes, pub/sub, request/reply and stream ports, opaque authorization decorators, bounded fan-out, a bounded in-memory broker, and a reusable pub/sub conformance suite.
 
-The module is private and requires Go 1.26 or newer.
+The module is private and requires Go 1.22 or newer.
 
 ## Installation
 
@@ -14,7 +14,7 @@ go env -w GONOSUMDB='github.com/justusschock/*'
 go get github.com/justusschock/go-messaging@v0.1.0
 ```
 
-The only non-standard-library dependency is [`github.com/justusschock/go-concurrency`](https://github.com/justusschock/go-concurrency) `v0.1.0`, used to bound parallel fan-out.
+The only non-standard-library dependency is [`github.com/justusschock/go-concurrency`](https://github.com/justusschock/go-concurrency) `v0.2.0`, used to bound parallel fan-out.
 
 ## Envelopes
 
@@ -208,6 +208,8 @@ go vet ./...
 go test -race ./...
 pre-commit run --all-files
 ```
+
+CI runs module verification, vet, and race-enabled tests on every supported Go minor version from 1.22 through 1.26.
 
 Local implementation plans live below `docs/` and are intentionally ignored by Git.
 
