@@ -2,7 +2,6 @@ package messaging
 
 import (
 	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"strings"
 	"time"
@@ -12,11 +11,20 @@ import (
 type MessageID string
 
 func NewMessageID() (MessageID, error) {
-	bytes := make([]byte, 16)
-	if _, err := rand.Read(bytes); err != nil {
+	var uuid [16]byte
+	milliseconds := uint64(time.Now().UnixMilli())
+	uuid[0] = byte(milliseconds >> 40)
+	uuid[1] = byte(milliseconds >> 32)
+	uuid[2] = byte(milliseconds >> 24)
+	uuid[3] = byte(milliseconds >> 16)
+	uuid[4] = byte(milliseconds >> 8)
+	uuid[5] = byte(milliseconds)
+	if _, err := rand.Read(uuid[6:]); err != nil {
 		return "", fmt.Errorf("generate message ID: %w", err)
 	}
-	return MessageID(hex.EncodeToString(bytes)), nil
+	uuid[6] = uuid[6]&0x0f | 0x70
+	uuid[8] = uuid[8]&0x3f | 0x80
+	return MessageID(fmt.Sprintf("%x-%x-%x-%x-%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:10], uuid[10:16])), nil
 }
 
 type Envelope[T any] struct {
