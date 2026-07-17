@@ -6,7 +6,7 @@ The module is private and requires Go 1.22 or newer.
 
 ## Installation
 
-Configure the Go toolchain for the private `justusschock` organization and authenticate GitHub using your normal Git credential flow. Then install the tagged module:
+Configure the Go toolchain for the private `justusschock` organization and authenticate GitHub using your normal Git credential flow. Then install the module:
 
 ```bash
 go env -w GOPRIVATE='github.com/justusschock/*'
