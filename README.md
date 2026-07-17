@@ -39,7 +39,7 @@ Message IDs are random 128-bit lowercase hexadecimal values. Subjects must be no
 The root package defines small generic interfaces so transports can be replaced without exposing protocol-specific types:
 
 - `Publisher[T]` publishes an `Envelope[T]`.
-- `Subscriber[T]` registers a `Subscription` and `Handler[T]`.
+- `Subscriber[T]` runs a `Subscription` and `Handler[T]` for the subscription lifetime. `Subscribe` blocks after registration and returns only when its context ends, the adapter closes, or a terminal error occurs; successful registration alone must not make it return.
 - `Delivery[T]` exposes a cloned envelope, its delivery attempt, and one-shot `Ack`/`Nack` settlement.
 - `Requester[Req, Resp]` and `RequestHandler[Req, Resp]` model request/reply.
 - `Stream[T]` models bidirectional send, receive, and close operations.
@@ -167,6 +167,8 @@ func TestAdapter(t *testing.T) {
 ```
 
 The suite verifies an at-least-once round trip while preserving message ID, payload, and headers. It repeatedly publishes a stable envelope so adapters whose subscription registration is asynchronous can conform without test-only synchronization APIs.
+
+`Run` gives `Publish` and `Subscribe` one shared context with a one-second deadline. Context-aware blocking adapter operations therefore terminate with a test failure instead of hanging the suite. The suite also enforces the `Subscriber` lifetime contract: `Subscribe` must remain active until the context ends after delivery.
 
 ## Errors
 
