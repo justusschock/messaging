@@ -1,52 +1,213 @@
 # go-messaging
 
-Transport-neutral messaging, event envelopes, pub/sub, request/reply, and streaming for Go.
+`go-messaging` provides typed, transport-neutral messaging contracts and small composition helpers for Go. It includes immutable envelopes, pub/sub, request/reply and stream ports, opaque authorization decorators, bounded fan-out, a bounded in-memory broker, and a reusable pub/sub conformance suite.
 
-> **Status:** Initial repository scaffold; the public API has not been implemented yet.
+The module is private and requires Go 1.26 or newer.
 
-Module path: `github.com/justusschock/go-messaging`
+## Installation
 
-## Scope
+Configure the Go toolchain for the private `justusschock` organization and authenticate GitHub using your normal Git credential flow. Then install the tagged module:
 
-Typed envelopes, publishers, subscribers, request/reply, streaming gateways, delivery semantics, and transport adapters with opaque authorization ports.
+```bash
+go env -w GOPRIVATE='github.com/justusschock/*'
+go env -w GONOSUMDB='github.com/justusschock/*'
+go get github.com/justusschock/go-messaging@v0.1.0
+```
 
-This library is private and intended for reuse by future Go projects.
+The only non-standard-library dependency is [`github.com/justusschock/go-concurrency`](https://github.com/justusschock/go-concurrency) `v0.1.0`, used to bound parallel fan-out.
 
-## Target platform dependencies
+## Envelopes
 
-Required imports:
+An envelope owns its header map. `NewEnvelope`, `WithHeader`, `Clone`, decorators, request/reply helpers, fan-out, and the in-memory broker all copy headers at their boundaries. Payloads are copied according to normal Go value semantics; callers that put pointers, maps, or slices in a payload remain responsible for their contents.
 
-- [`go-concurrency`](https://github.com/justusschock/go-concurrency)
+```go
+envelope, err := messaging.NewEnvelope("orders.created", Order{ID: "order-42"})
+if err != nil {
+	return err
+}
+envelope, err = envelope.WithHeader("trace", traceID)
+if err != nil {
+	return err
+}
+return publisher.Publish(ctx, envelope)
+```
 
-Optional adapter imports:
+Message IDs are random 128-bit lowercase hexadecimal values. Subjects must be non-empty and contain no whitespace. Envelopes also require a non-empty ID, a non-zero sent time, and non-empty header keys.
 
-None currently planned.
+## Core ports
 
-Optional integrations must remain one-way: concrete adapters import their neutral contracts, never the reverse.
+The root package defines small generic interfaces so transports can be replaced without exposing protocol-specific types:
 
-## Design constraints
+- `Publisher[T]` publishes an `Envelope[T]`.
+- `Subscriber[T]` registers a `Subscription` and `Handler[T]`.
+- `Delivery[T]` exposes a cloned envelope, its delivery attempt, and one-shot `Ack`/`Nack` settlement.
+- `Requester[Req, Resp]` and `RequestHandler[Req, Resp]` model request/reply.
+- `Stream[T]` models bidirectional send, receive, and close operations.
 
-- Keep public contracts independent of product-specific resource types.
-- Keep the dependency graph acyclic; imports point toward lower-level mechanisms.
-- Put generic lifecycle transfer in `go-lifecycle/handoff` and finite resource-right transfer in `go-resources/handoff`.
-- Use `go-cache` only for reconstructible, disposable state, never correctness-critical state.
+Transport implementations should depend on these contracts; application code should not need broker- or protocol-specific types.
+
+## In-memory pub/sub
+
+`memory.Broker` is a bounded reference transport suitable for tests, local composition, and process-local messaging:
+
+```go
+broker := memory.NewBroker[Order](10 * time.Millisecond)
+defer broker.Close()
+
+subscription := messaging.Subscription{
+	Subject:     "orders.created",
+	Consumer:    "audit",
+	Semantics:   messaging.AtLeastOnce,
+	MaxInFlight: 8,
+}
+
+subscribeCtx, stop := context.WithCancel(ctx)
+defer stop()
+go func() {
+	err := broker.Subscribe(subscribeCtx, subscription, func(ctx context.Context, delivery messaging.Delivery[Order]) error {
+		order := delivery.Envelope().Payload
+		if err := audit(ctx, order); err != nil {
+			return delivery.Nack(ctx, err)
+		}
+		return delivery.Ack(ctx)
+	})
+	if err != nil && !errors.Is(err, context.Canceled) {
+		log.Printf("subscriber stopped: %v", err)
+	}
+}()
+
+envelope, err := messaging.NewEnvelope("orders.created", order)
+if err != nil {
+	return err
+}
+if err := broker.Publish(ctx, envelope); err != nil {
+	return err
+}
+```
+
+Subscriptions are identified by subject and consumer name. Each consumer receives a channel buffer of `MaxInFlight`; when that buffer is full, `Publish` blocks until capacity becomes available, the consumer leaves, or the publishing context ends. Consumers for a subject are visited in consumer-name order.
+
+Delivery semantics are explicit:
+
+- `AtMostOnce` invokes the handler once for each enqueued envelope. Handler errors and missing settlement do not cause a retry.
+- `AtLeastOnce` retries with increasing attempt numbers until the handler acknowledges the delivery. Handler errors, missing settlement, and negative acknowledgement all retry after the broker's configured delay. The subscription context or broker closure ends retrying.
+
+Every delivery attempt has independent one-shot settlement state. Calling `Ack` or `Nack` after either method has already settled that attempt returns `ErrDeliverySettled`.
+
+The broker never closes consumer message channels. `Close` is idempotent, rejects new operations, and wakes blocked subscribers and publishers. It does not persist messages.
+
+## Bounded fan-out
+
+`FanoutPublisher` publishes a cloned envelope to every configured target while limiting parallel calls:
+
+```go
+fanout, err := messaging.NewFanoutPublisher(
+	[]messaging.Publisher[Event]{auditPublisher, eventPublisher, metricsPublisher},
+	2,
+)
+if err != nil {
+	return err
+}
+if err := fanout.Publish(ctx, envelope); err != nil {
+	return err
+}
+```
+
+All admitted targets run. Target errors are wrapped as `publisher N: ...` in input order and joined with `errors.Join`, so callers can use `errors.Is` for every underlying failure. A canceled context can stop further admission through the bounded concurrency primitive.
+
+## Authorization
+
+Authorization is intentionally opaque. The package understands only an `Authorizer` port and does not interpret identities, tokens, credentials, roles, or policy languages.
+
+```go
+secured, err := messaging.NewAuthorizedPublisher(eventPublisher, authorizer)
+if err != nil {
+	return err
+}
+if err := secured.Publish(ctx, envelope); err != nil {
+	return err
+}
+```
+
+The publisher decorator validates first, then authorizes action `publish` with copied envelope headers as attributes. The subscriber decorator uses action `subscribe` and supplies the consumer name as the `consumer` attribute. A denial wraps both `ErrUnauthorized` and the authorizer's error, and the wrapped transport is never called.
+
+## Request/reply
+
+`HandlerRequester` adapts an in-process request handler to `Requester` while preserving transport-boundary validation and header copies:
+
+```go
+requester, err := messaging.NewHandlerRequester(func(ctx context.Context, request messaging.Envelope[int]) (messaging.Envelope[int], error) {
+	return messaging.NewEnvelope(request.Subject+".reply", request.Payload*2)
+})
+if err != nil {
+	return err
+}
+
+request, _ := messaging.NewEnvelope("double", 21)
+response, err := requester.Request(ctx, request)
+if err != nil {
+	return err
+}
+fmt.Println(response.Payload) // 42
+```
+
+Both request and response envelopes are validated. The handler receives a clone, and the caller receives a clone of the validated response.
+
+## Adapter conformance
+
+Transport adapters can reuse the public conformance suite:
+
+```go
+func TestAdapter(t *testing.T) {
+	conformance.Run(t, func(t *testing.T) (messaging.Publisher[string], messaging.Subscriber[string], func()) {
+		adapter := newAdapter(t)
+		return adapter, adapter, func() { adapter.Close() }
+	})
+}
+```
+
+The suite verifies an at-least-once round trip while preserving message ID, payload, and headers. It repeatedly publishes a stable envelope so adapters whose subscription registration is asynchronous can conform without test-only synchronization APIs.
+
+## Errors
+
+All stable package errors support `errors.Is`:
+
+| Error | Meaning |
+| --- | --- |
+| `ErrInvalidEnvelope` | Envelope metadata is incomplete or malformed. |
+| `ErrInvalidSubscription` | Subscription identity, semantics, or capacity is invalid. |
+| `ErrUnauthorized` | An authorization decorator denied the operation. |
+| `ErrDeliverySettled` | A delivery attempt was already acknowledged or negatively acknowledged. |
+| `ErrConsumerExists` | The subject already has a consumer with that name. |
+| `ErrClosed` | The broker has closed or closed an active subscription. |
+| `ErrNilDependency` | A required publisher, subscriber, authorizer, handler, or publisher list entry is nil. |
+
+`NewFanoutPublisher` wraps `concurrency.ErrInvalidLimit` for a non-positive limit. Operations that wait on work return the relevant context cancellation or deadline error. Authorization denials preserve the authorizer's original error alongside `ErrUnauthorized`.
+
+## Non-goals
+
+This module deliberately does not provide:
+
+- durable or networked brokers;
+- transactions or exactly-once delivery claims;
+- schema registries, subject wildcards, routing languages, or protocol adapters;
+- credential parsing, authentication, identity storage, or policy evaluation;
+- payload deep-copying or serialization.
+
+Those concerns belong in adapters or higher-level packages built on these transport-neutral contracts.
 
 ## Development
 
-Install and run the repository hooks:
+Run the complete verification suite with private-module settings available in the environment:
 
 ```bash
-pre-commit install
+gofmt -w *.go memory/*.go conformance/*.go
+go vet ./...
+go test -race ./...
 pre-commit run --all-files
 ```
 
-Once the module implementation exists, run its Go checks with:
-
-```bash
-go test ./...
-```
-
-Local implementation plans live under `docs/` and are intentionally excluded from Git.
+Local implementation plans live below `docs/` and are intentionally ignored by Git.
 
 ## License
 
