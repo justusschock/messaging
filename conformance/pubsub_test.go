@@ -7,9 +7,9 @@ import (
 	"testing/synctest"
 	"time"
 
-	"github.com/justusschock/go-messaging"
-	"github.com/justusschock/go-messaging/conformance"
-	"github.com/justusschock/go-messaging/memory"
+	"github.com/justusschock/messaging"
+	"github.com/justusschock/messaging/conformance"
+	"github.com/justusschock/messaging/memory"
 )
 
 // The in-memory broker performs no I/O, so the suite runs inside a synctest

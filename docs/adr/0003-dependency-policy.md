@@ -13,7 +13,7 @@
 Recorded retrospectively for the first public release. A messaging
 abstraction sits low in an application's dependency graph; every dependency
 it pulls in reaches every user. The module depends on the standard library
-and on one module, `github.com/justusschock/go-concurrency`, whose
+and on one module, `github.com/justusschock/concurrency`, whose
 `ParallelMap` bounds the parallel calls in `FanoutPublisher` and whose
 `ErrInvalidLimit` the constructor wraps. Message IDs are UUIDv7 strings
 generated with `crypto/rand` and `time` rather than a UUID library.
@@ -26,7 +26,7 @@ generated with `crypto/rand` and `time` rather than a UUID library.
 
 ## Considered options
 
-1. **Standard library plus `go-concurrency` (chosen)**
+1. **Standard library plus `concurrency` (chosen)**
    - Pro: tiny module graph; the bounded-parallelism logic (admission,
      cancellation, waiting) is shared with sibling libraries and tested
      there.
@@ -39,11 +39,11 @@ generated with `crypto/rand` and `time` rather than a UUID library.
 3. **Third-party UUID and errgroup-style modules**
    - Pro: well-known implementations.
    - Con: more modules for roughly twenty lines of code (UUIDv7) and a
-     primitive already available from `go-concurrency`.
+     primitive already available from `concurrency`.
 
 ## Decision
 
-We will depend only on the standard library and `go-concurrency`. Any new
+We will depend only on the standard library and `concurrency`. Any new
 dependency, including another `justusschock` library, needs an ADR. Broker
 clients and protocol libraries belong in adapter modules, not in this one.
 
@@ -53,7 +53,7 @@ clients and protocol libraries belong in adapter modules, not in this one.
 - Importing the module adds one small module to a build.
 
 ### Negative
-- Changes to `go-concurrency`'s error values or `ParallelMap` semantics
+- Changes to `concurrency`'s error values or `ParallelMap` semantics
   affect `FanoutPublisher`.
 
 ### Follow-ups
@@ -61,4 +61,4 @@ clients and protocol libraries belong in adapter modules, not in this one.
 
 ## Links
 
-- [PRD-0001](../prd/0001-go-messaging.md), NFR-MSG-04
+- [PRD-0001](../prd/0001-messaging.md), NFR-MSG-04

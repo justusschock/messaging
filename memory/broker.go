@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/justusschock/go-messaging"
+	"github.com/justusschock/messaging"
 )
 
 type consumer[T any] struct {

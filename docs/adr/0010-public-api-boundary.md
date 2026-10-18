@@ -80,4 +80,4 @@ The module has no `Clock` abstraction: tests control time with
 
 ## Links
 
-- [PRD-0001](../prd/0001-go-messaging.md)
+- [PRD-0001](../prd/0001-messaging.md)

@@ -76,5 +76,5 @@ We will:
 
 ## Links
 
-- [PRD-0001](../prd/0001-go-messaging.md), FR-MSG-15 to FR-MSG-18, NFR-MSG-01,
+- [PRD-0001](../prd/0001-messaging.md), FR-MSG-15 to FR-MSG-18, NFR-MSG-01,
   NFR-MSG-02

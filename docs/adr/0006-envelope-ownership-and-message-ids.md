@@ -82,5 +82,5 @@ remains a `string` type so adapters can carry any ID their protocol uses.
 
 ## Links
 
-- [PRD-0001](../prd/0001-go-messaging.md), FR-MSG-02 to FR-MSG-04
+- [PRD-0001](../prd/0001-messaging.md), FR-MSG-02 to FR-MSG-04
 - RFC 9562, section 5.7 (UUID version 7)

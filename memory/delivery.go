@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync/atomic"
 
-	"github.com/justusschock/go-messaging"
+	"github.com/justusschock/messaging"
 )
 
 const (

@@ -75,4 +75,4 @@ with context using `%w`:
 
 ## Links
 
-- [PRD-0001](../prd/0001-go-messaging.md), FR-MSG-03, FR-MSG-05 to FR-MSG-09
+- [PRD-0001](../prd/0001-messaging.md), FR-MSG-03, FR-MSG-05 to FR-MSG-09

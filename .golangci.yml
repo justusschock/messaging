@@ -18,4 +18,4 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - github.com/justusschock/go-messaging
+        - github.com/justusschock/messaging

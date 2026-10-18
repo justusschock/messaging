@@ -75,4 +75,4 @@ module ships no implementation.
 
 ## Links
 
-- [PRD-0001](../prd/0001-go-messaging.md), FR-MSG-01
+- [PRD-0001](../prd/0001-messaging.md), FR-MSG-01

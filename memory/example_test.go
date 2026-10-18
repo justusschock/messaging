@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/justusschock/go-messaging"
-	"github.com/justusschock/go-messaging/memory"
+	"github.com/justusschock/messaging"
+	"github.com/justusschock/messaging/memory"
 )
 
 // FR-MSG-12, FR-MSG-16

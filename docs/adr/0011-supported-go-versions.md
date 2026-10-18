@@ -59,4 +59,4 @@ oldest upstream-supported release without one.
 ## Links
 
 - [Go release policy](https://go.dev/doc/devel/release#policy)
-- [PRD-0001](../prd/0001-go-messaging.md), NFR-MSG-06
+- [PRD-0001](../prd/0001-messaging.md), NFR-MSG-06

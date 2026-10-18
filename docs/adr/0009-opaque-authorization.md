@@ -61,4 +61,4 @@ authorizer only sees well-formed requests.
 
 ## Links
 
-- [PRD-0001](../prd/0001-go-messaging.md), FR-MSG-07, FR-MSG-08
+- [PRD-0001](../prd/0001-messaging.md), FR-MSG-07, FR-MSG-08

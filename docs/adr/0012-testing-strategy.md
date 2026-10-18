@@ -70,4 +70,4 @@ We will:
 ## Links
 
 - [testing/synctest](https://pkg.go.dev/testing/synctest)
-- [PRD-0001](../prd/0001-go-messaging.md), NFR-MSG-01, NFR-MSG-03
+- [PRD-0001](../prd/0001-messaging.md), NFR-MSG-01, NFR-MSG-03

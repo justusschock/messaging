@@ -10,7 +10,7 @@
 
 ## Context
 
-Recorded retrospectively for the first public release. `go-messaging` was
+Recorded retrospectively for the first public release. `messaging` was
 built before its decisions were written down. Public contributors need to
 know what the library promises, why it is shaped the way it is, and how to
 propose changes without re-arguing settled questions.

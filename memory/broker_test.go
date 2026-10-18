@@ -10,7 +10,7 @@ import (
 	"testing/synctest"
 	"time"
 
-	"github.com/justusschock/go-messaging"
+	"github.com/justusschock/messaging"
 )
 
 // retryDelay is the broker redelivery delay used by the tests. Inside a

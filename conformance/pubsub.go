@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/justusschock/go-messaging"
+	"github.com/justusschock/messaging"
 )
 
 // Factory creates the publisher and subscriber under test, typically the same

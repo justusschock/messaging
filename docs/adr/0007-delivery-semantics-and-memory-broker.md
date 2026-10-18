@@ -73,4 +73,4 @@ broker:
 
 ## Links
 
-- [PRD-0001](../prd/0001-go-messaging.md), FR-MSG-11 to FR-MSG-19
+- [PRD-0001](../prd/0001-messaging.md), FR-MSG-11 to FR-MSG-19

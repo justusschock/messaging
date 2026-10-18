@@ -37,7 +37,7 @@ Preparation for the first public release.
 - Tests run on `testing/synctest` virtual time; new tests cover consumer-name
   ordering, redelivery cancellation, `Close` releasing blocked publishers and
   fan-out admission after cancellation. Tests cite requirement IDs.
-- Requirements ([PRD-0001](docs/prd/0001-go-messaging.md)) and retrospective
+- Requirements ([PRD-0001](docs/prd/0001-messaging.md)) and retrospective
   architecture decisions in [docs/](docs/README.md).
 - `NOTICE`, `AGENTS.md`, a golangci-lint configuration, Dependabot, and a CI
   workflow with SHA-pinned actions and a lint job.
@@ -48,7 +48,7 @@ Preparation for the first public release.
 
 - `NewMessageID` generates canonical lowercase UUIDv7 strings instead of 32
   random hex digits.
-- The module supports Go 1.22 and newer and depends on `go-concurrency`
+- The module supports Go 1.22 and newer and depends on `concurrency`
   v0.2.0.
 
 ## [0.1.0] - 2026-07-17
@@ -61,6 +61,6 @@ Preparation for the first public release.
 - Bounded in-memory broker with at-most-once and at-least-once delivery.
 - Pub/sub adapter conformance suite.
 
-[Unreleased]: https://github.com/justusschock/go-messaging/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/justusschock/go-messaging/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/justusschock/go-messaging/releases/tag/v0.1.0
+[Unreleased]: https://github.com/justusschock/messaging/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/justusschock/messaging/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/justusschock/messaging/releases/tag/v0.1.0

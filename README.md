@@ -1,6 +1,6 @@
-# go-messaging
+# messaging
 
-`go-messaging` provides typed, transport-neutral messaging contracts for Go:
+`messaging` provides typed, transport-neutral messaging contracts for Go:
 a generic envelope, small publish/subscribe, request/reply and stream
 interfaces, and composable helpers around them. It is for application and
 library authors who want message-driven code that does not depend on one
@@ -24,11 +24,11 @@ conformance suite to test against.
 ## Installation
 
 ```sh
-go get github.com/justusschock/go-messaging@latest
+go get github.com/justusschock/messaging@latest
 ```
 
 Requires Go 1.25 or newer. The only dependency outside the standard library
-is [`github.com/justusschock/go-concurrency`](https://github.com/justusschock/go-concurrency),
+is [`github.com/justusschock/concurrency`](https://github.com/justusschock/concurrency),
 used to bound fan-out parallelism.
 
 ## Quick start
@@ -44,8 +44,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/justusschock/go-messaging"
-	"github.com/justusschock/go-messaging/memory"
+	"github.com/justusschock/messaging"
+	"github.com/justusschock/messaging/memory"
 )
 
 func main() {
@@ -184,9 +184,9 @@ in-process adapters can run it inside a `testing/synctest` bubble.
 
 | Package | Import path | Purpose |
 |---|---|---|
-| `messaging` | `github.com/justusschock/go-messaging` | Envelope, ports, errors and decorators. |
-| `memory` | `github.com/justusschock/go-messaging/memory` | Bounded in-process broker implementing `Publisher` and `Subscriber`. |
-| `conformance` | `github.com/justusschock/go-messaging/conformance` | Test suite for transport adapters. |
+| `messaging` | `github.com/justusschock/messaging` | Envelope, ports, errors and decorators. |
+| `memory` | `github.com/justusschock/messaging/memory` | Bounded in-process broker implementing `Publisher` and `Subscriber`. |
+| `conformance` | `github.com/justusschock/messaging/conformance` | Test suite for transport adapters. |
 
 Packages under `internal/`, if any, are not part of the API.
 
@@ -214,7 +214,7 @@ Packages under `internal/`, if any, are not part of the API.
 
 ## Documentation
 
-- API reference: [pkg.go.dev/github.com/justusschock/go-messaging](https://pkg.go.dev/github.com/justusschock/go-messaging)
+- API reference: [pkg.go.dev/github.com/justusschock/messaging](https://pkg.go.dev/github.com/justusschock/messaging)
 - Requirements and design decisions: [docs/](docs/README.md)
 
 ## Contributing

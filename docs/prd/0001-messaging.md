@@ -19,7 +19,7 @@ subscription model. Swapping the transport, testing without it, or adding a
 cross-cutting concern such as authorization then means touching every call
 site.
 
-`go-messaging` gives such code a small set of typed contracts to depend on
+`messaging` gives such code a small set of typed contracts to depend on
 instead: an envelope with metadata and a generic payload, and ports for
 publish/subscribe, request/reply and streams. Around those contracts it
 provides composable decorators (authorization, bounded fan-out, in-process
@@ -98,7 +98,7 @@ they honour the contracts.
 | NFR-MSG-01 | Exported types state their concurrency safety; the broker and the decorators are safe for concurrent use. | `go test -race -count=3 ./...` passes. |
 | NFR-MSG-02 | Memory use is bounded by configuration: per-consumer buffers by `MaxInFlight`, fan-out parallelism by `maxParallel`. | FR-MSG-09 and FR-MSG-17 tests. |
 | NFR-MSG-03 | Tests are deterministic and do not wait on wall-clock time; time and concurrency are tested with `testing/synctest`. | No `time.Sleep`/wall-clock polling outside synctest bubbles. |
-| NFR-MSG-04 | Dependencies are limited to the standard library and `github.com/justusschock/go-concurrency` (ADR-0003). | `go.mod` require block. |
+| NFR-MSG-04 | Dependencies are limited to the standard library and `github.com/justusschock/concurrency` (ADR-0003). | `go.mod` require block. |
 | NFR-MSG-05 | The library never logs; it reports through return values. Errors are sentinel values matched with `errors.Is`. | Code review; error tests. |
 | NFR-MSG-06 | The module supports Go 1.25 and newer (ADR-0011). | CI matrix `1.25.x`, `oldstable`, `stable`. |
 

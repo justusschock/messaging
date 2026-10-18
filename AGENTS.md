@@ -1,10 +1,10 @@
 # AGENTS.md
 
-Rules for anyone, human or agent, changing go-messaging. They are binding. If a
+Rules for anyone, human or agent, changing messaging. They are binding. If a
 change has to break one, say so in the pull request and, where it is a design
 decision, record it in an ADR.
 
-go-messaging is a Go library of typed, transport-neutral messaging contracts
+messaging is a Go library of typed, transport-neutral messaging contracts
 (envelopes and publish/subscribe, request/reply and stream ports) with
 composable decorators, a bounded in-memory broker and an adapter conformance
 suite. Its requirements and design decisions are recorded in
@@ -54,7 +54,7 @@ No behaviour is added or changed before the documents that govern it say so.
 
 ## Layout
 
-One Go module, `github.com/justusschock/go-messaging`:
+One Go module, `github.com/justusschock/messaging`:
 
 - `.` (package `messaging`): `Envelope`, message IDs, `Subscription`, the
   ports (`Publisher`, `Subscriber`, `Delivery`, `Handler`, `Requester`,
@@ -73,7 +73,7 @@ One Go module, `github.com/justusschock/go-messaging`:
 1. **Small, explicit contracts.** Every exported type and function documents
    its behaviour, errors, concurrency safety and cancellation.
 2. **Dependencies.** Standard library plus
-   `github.com/justusschock/go-concurrency` only (ADR-0003). Any new
+   `github.com/justusschock/concurrency` only (ADR-0003). Any new
    dependency needs an ADR; broker clients and protocol libraries belong in
    adapter modules, not here.
 3. **Errors.** Sentinel errors and typed errors are part of the API; wrap

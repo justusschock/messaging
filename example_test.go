@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/justusschock/go-messaging"
+	"github.com/justusschock/messaging"
 )
 
 type recordingPublisher struct {

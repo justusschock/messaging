@@ -1,6 +1,6 @@
-# go-messaging documentation
+# messaging documentation
 
-Requirements (PRDs) and architecture decisions (ADRs) for `go-messaging`.
+Requirements (PRDs) and architecture decisions (ADRs) for `messaging`.
 The process is described in [ADR-0001](adr/0001-record-architecture-decisions.md)
 and [AGENTS.md](../AGENTS.md). New documents start from the
 [PRD template](prd/TEMPLATE.md) or the [ADR template](adr/TEMPLATE.md).
@@ -9,7 +9,7 @@ and [AGENTS.md](../AGENTS.md). New documents start from the
 
 | PRD | Title | Status | Implementation |
 |---|---|---|---|
-| [0001](prd/0001-go-messaging.md) | Typed, transport-neutral messaging | Accepted | Complete |
+| [0001](prd/0001-messaging.md) | Typed, transport-neutral messaging | Accepted | Complete |
 
 ## Architecture decisions
 
