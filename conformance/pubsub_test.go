@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/justusschock/go-messaging"
@@ -11,27 +12,34 @@ import (
 	"github.com/justusschock/go-messaging/memory"
 )
 
+// The in-memory broker performs no I/O, so the suite runs inside a synctest
+// bubble and its real-time deadlines and polling cost no wall-clock time.
+
 func TestMemoryBroker(t *testing.T) {
-	conformance.Run(t, func(t *testing.T) (messaging.Publisher[string], messaging.Subscriber[string], func()) {
-		t.Helper()
-		broker := memory.NewBroker[string](time.Millisecond)
-		return broker, broker, func() {
-			if err := broker.Close(); err != nil {
-				t.Errorf("Close: %v", err)
+	synctest.Test(t, func(t *testing.T) {
+		conformance.Run(t, func(t *testing.T) (messaging.Publisher[string], messaging.Subscriber[string], func()) {
+			t.Helper()
+			broker := memory.NewBroker[string](time.Millisecond)
+			return broker, broker, func() {
+				if err := broker.Close(); err != nil {
+					t.Errorf("Close: %v", err)
+				}
 			}
-		}
+		})
 	})
 }
 
 func TestRunProvidesBoundedOperationContext(t *testing.T) {
-	broker := memory.NewBroker[string](time.Millisecond)
-	adapter := &deadlineAdapter{broker: broker}
-	conformance.Run(t, func(*testing.T) (messaging.Publisher[string], messaging.Subscriber[string], func()) {
-		return adapter, adapter, func() {
-			if err := broker.Close(); err != nil {
-				t.Errorf("Close: %v", err)
+	synctest.Test(t, func(t *testing.T) {
+		broker := memory.NewBroker[string](time.Millisecond)
+		adapter := &deadlineAdapter{broker: broker}
+		conformance.Run(t, func(*testing.T) (messaging.Publisher[string], messaging.Subscriber[string], func()) {
+			return adapter, adapter, func() {
+				if err := broker.Close(); err != nil {
+					t.Errorf("Close: %v", err)
+				}
 			}
-		}
+		})
 	})
 }
 

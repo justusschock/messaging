@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"testing/synctest"
 	"time"
 )
 
@@ -34,30 +35,43 @@ func TestEnvelopeCopiesHeadersAndValidates(t *testing.T) {
 }
 
 func TestNewMessageIDIsUUIDv7String(t *testing.T) {
-	before := time.Now().UnixMilli()
-	first, err := NewMessageID()
-	if err != nil {
-		t.Fatal(err)
-	}
-	after := time.Now().UnixMilli()
-	second, err := NewMessageID()
-	if err != nil {
-		t.Fatal(err)
-	}
+	// The bubble's fake clock makes the embedded timestamp exact.
+	synctest.Test(t, func(t *testing.T) {
+		now := time.Now().UnixMilli()
+		first, err := NewMessageID()
+		if err != nil {
+			t.Fatal(err)
+		}
+		second, err := NewMessageID()
+		if err != nil {
+			t.Fatal(err)
+		}
+		time.Sleep(time.Millisecond)
+		later, err := NewMessageID()
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	if !regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`).MatchString(string(first)) {
-		t.Fatalf("ID=%q", first)
-	}
-	timestamp, err := strconv.ParseInt(strings.ReplaceAll(string(first), "-", "")[:12], 16, 64)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if timestamp < before || timestamp > after {
-		t.Fatalf("timestamp=%d, want between %d and %d", timestamp, before, after)
-	}
-	if first == second {
-		t.Fatalf("duplicate IDs: %q", first)
-	}
+		uuidv7 := regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`)
+		for _, id := range []MessageID{first, second, later} {
+			if !uuidv7.MatchString(string(id)) {
+				t.Fatalf("ID=%q", id)
+			}
+		}
+		timestamp, err := strconv.ParseInt(strings.ReplaceAll(string(first), "-", "")[:12], 16, 64)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if timestamp != now {
+			t.Fatalf("timestamp=%d, want %d", timestamp, now)
+		}
+		if first == second {
+			t.Fatalf("duplicate IDs: %q", first)
+		}
+		if later <= first || later <= second {
+			t.Fatalf("ID %q from a later millisecond does not sort after %q and %q", later, first, second)
+		}
+	})
 }
 
 func TestNewEnvelopeInitializesValidMetadata(t *testing.T) {

@@ -3,11 +3,9 @@ package messaging
 import (
 	"context"
 	"errors"
-	"runtime"
-	"sync"
 	"sync/atomic"
 	"testing"
-	"time"
+	"testing/synctest"
 
 	"github.com/justusschock/go-concurrency"
 )
@@ -42,7 +40,6 @@ func TestFanoutCallsAllAndJoinsIndexedErrors(t *testing.T) {
 func TestFanoutClonesEnvelopePerPublisher(t *testing.T) {
 	publishers := make([]Publisher[int], 2)
 	for index := range publishers {
-		index := index
 		publishers[index] = publisherFunc[int](func(_ context.Context, envelope Envelope[int]) error {
 			if envelope.Headers["trace"] != "original" {
 				return errors.New("publisher received aliased headers")
@@ -73,57 +70,85 @@ func TestFanoutClonesEnvelopePerPublisher(t *testing.T) {
 }
 
 func TestFanoutLimitsParallelPublishers(t *testing.T) {
-	var current atomic.Int32
-	var maximum atomic.Int32
-	var calls atomic.Int32
-	release := make(chan struct{})
-	var releaseOnce sync.Once
-	t.Cleanup(func() { releaseOnce.Do(func() { close(release) }) })
-
-	publishers := make([]Publisher[int], 6)
-	for index := range publishers {
-		publishers[index] = publisherFunc[int](func(context.Context, Envelope[int]) error {
-			active := current.Add(1)
-			for {
-				observed := maximum.Load()
-				if active <= observed || maximum.CompareAndSwap(observed, active) {
-					break
+	synctest.Test(t, func(t *testing.T) {
+		var current, maximum, calls atomic.Int32
+		release := make(chan struct{})
+		publishers := make([]Publisher[int], 6)
+		for index := range publishers {
+			publishers[index] = publisherFunc[int](func(context.Context, Envelope[int]) error {
+				active := current.Add(1)
+				for {
+					observed := maximum.Load()
+					if active <= observed || maximum.CompareAndSwap(observed, active) {
+						break
+					}
 				}
-			}
-			calls.Add(1)
-			<-release
-			current.Add(-1)
-			return nil
-		})
-	}
-	fanout, err := NewFanoutPublisher(publishers, 2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	envelope, err := NewEnvelope("events", 1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	result := make(chan error, 1)
-	go func() { result <- fanout.Publish(context.Background(), envelope) }()
+				calls.Add(1)
+				<-release
+				current.Add(-1)
+				return nil
+			})
+		}
+		fanout, err := NewFanoutPublisher(publishers, 2)
+		if err != nil {
+			t.Fatal(err)
+		}
+		envelope, err := NewEnvelope("events", 1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		result := make(chan error, 1)
+		go func() { result <- fanout.Publish(t.Context(), envelope) }()
 
-	deadline := time.Now().Add(time.Second)
-	for calls.Load() < 2 && time.Now().Before(deadline) {
-		runtime.Gosched()
-	}
-	if calls.Load() != 2 {
-		t.Fatalf("calls before release=%d", calls.Load())
-	}
-	if maximum.Load() > 2 {
-		t.Fatalf("max parallel=%d", maximum.Load())
-	}
-	releaseOnce.Do(func() { close(release) })
-	if err := <-result; err != nil {
-		t.Fatal(err)
-	}
-	if calls.Load() != int32(len(publishers)) || maximum.Load() > 2 {
-		t.Fatalf("calls=%d max parallel=%d", calls.Load(), maximum.Load())
-	}
+		synctest.Wait()
+		if calls.Load() != 2 || maximum.Load() != 2 {
+			t.Fatalf("before release: calls=%d max parallel=%d, want 2 and 2", calls.Load(), maximum.Load())
+		}
+		close(release)
+		if err := <-result; err != nil {
+			t.Fatal(err)
+		}
+		if calls.Load() != int32(len(publishers)) || maximum.Load() != 2 {
+			t.Fatalf("calls=%d max parallel=%d", calls.Load(), maximum.Load())
+		}
+	})
+}
+
+func TestFanoutStopsAdmittingAfterCancel(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		var calls atomic.Int32
+		release := make(chan struct{})
+		publishers := make([]Publisher[int], 4)
+		for index := range publishers {
+			publishers[index] = publisherFunc[int](func(context.Context, Envelope[int]) error {
+				calls.Add(1)
+				<-release
+				return nil
+			})
+		}
+		fanout, err := NewFanoutPublisher(publishers, 1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		envelope, err := NewEnvelope("events", 1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		ctx, cancel := context.WithCancel(t.Context())
+		result := make(chan error, 1)
+		go func() { result <- fanout.Publish(ctx, envelope) }()
+
+		synctest.Wait() // the first target runs, the second waits for admission
+		cancel()
+		synctest.Wait()
+		close(release)
+		if err := <-result; !errors.Is(err, context.Canceled) {
+			t.Fatalf("Publish error=%v", err)
+		}
+		if calls.Load() != 1 {
+			t.Fatalf("calls=%d, want 1", calls.Load())
+		}
+	})
 }
 
 func TestFanoutRejectsInvalidConfiguration(t *testing.T) {
