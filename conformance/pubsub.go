@@ -90,7 +90,10 @@ func Run(t *testing.T, factory Factory) {
 			}
 			cancel()
 			select {
-			case <-subscribed:
+			case err := <-subscribed:
+				// Only termination is required; the returned error after
+				// cancellation is adapter-defined.
+				_ = err
 			case <-time.After(time.Second):
 				t.Fatal("subscriber did not stop during cleanup")
 			}
