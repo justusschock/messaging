@@ -157,17 +157,15 @@ func (broker *Broker[T]) deliverUntilAck(ctx context.Context, registered *consum
 			return nil
 		}
 
+		// Since Go 1.23 a stopped timer never delivers a stale value, so the
+		// channel must not be drained after Stop (doing so would block forever).
 		timer := time.NewTimer(broker.retryDelay)
 		select {
 		case <-ctx.Done():
-			if !timer.Stop() {
-				<-timer.C
-			}
+			timer.Stop()
 			return ctx.Err()
 		case <-registered.done:
-			if !timer.Stop() {
-				<-timer.C
-			}
+			timer.Stop()
 			return messaging.ErrClosed
 		case <-timer.C:
 		}
