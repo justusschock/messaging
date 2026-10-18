@@ -15,6 +15,7 @@ import (
 // The in-memory broker performs no I/O, so the suite runs inside a synctest
 // bubble and its real-time deadlines and polling cost no wall-clock time.
 
+// FR-MSG-01, FR-MSG-20
 func TestMemoryBroker(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		conformance.Run(t, func(t *testing.T) (messaging.Publisher[string], messaging.Subscriber[string], func()) {
@@ -29,6 +30,7 @@ func TestMemoryBroker(t *testing.T) {
 	})
 }
 
+// FR-MSG-20
 func TestRunProvidesBoundedOperationContext(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		broker := memory.NewBroker[string](time.Millisecond)

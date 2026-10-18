@@ -23,6 +23,7 @@ func (publisher recordingPublisher) Publish(_ context.Context, _ messaging.Envel
 	return nil
 }
 
+// FR-MSG-09
 func ExampleFanoutPublisher() {
 	var mu sync.Mutex
 	names := []string{}

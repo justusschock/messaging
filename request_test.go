@@ -6,6 +6,7 @@ import (
 	"testing"
 )
 
+// FR-MSG-10
 func TestHandlerRequesterValidatesResponse(t *testing.T) {
 	requester, err := NewHandlerRequester(func(_ context.Context, request Envelope[int]) (Envelope[int], error) {
 		return NewEnvelope(request.Subject+".reply", request.Payload*2)
@@ -24,6 +25,7 @@ func TestHandlerRequesterValidatesResponse(t *testing.T) {
 	}
 }
 
+// FR-MSG-10
 func TestHandlerRequesterValidatesBeforeCallingHandler(t *testing.T) {
 	called := false
 	requester, err := NewHandlerRequester(func(context.Context, Envelope[int]) (Envelope[int], error) {
@@ -40,6 +42,7 @@ func TestHandlerRequesterValidatesBeforeCallingHandler(t *testing.T) {
 	}
 }
 
+// FR-MSG-10
 func TestHandlerRequesterRejectsInvalidResponse(t *testing.T) {
 	requester, err := NewHandlerRequester(func(context.Context, Envelope[int]) (Envelope[int], error) {
 		return Envelope[int]{}, nil
@@ -58,6 +61,7 @@ func TestHandlerRequesterRejectsInvalidResponse(t *testing.T) {
 	}
 }
 
+// FR-MSG-04, FR-MSG-10
 func TestHandlerRequesterCopiesTransportBoundaries(t *testing.T) {
 	var sourceResponse Envelope[int]
 	requester, err := NewHandlerRequester(func(_ context.Context, request Envelope[int]) (Envelope[int], error) {
@@ -95,6 +99,7 @@ func TestHandlerRequesterCopiesTransportBoundaries(t *testing.T) {
 	}
 }
 
+// FR-MSG-10
 func TestHandlerRequesterReturnsHandlerError(t *testing.T) {
 	want := errors.New("handler failed")
 	requester, err := NewHandlerRequester(func(context.Context, Envelope[int]) (Envelope[int], error) {
@@ -114,6 +119,7 @@ func TestHandlerRequesterReturnsHandlerError(t *testing.T) {
 	}
 }
 
+// FR-MSG-06
 func TestHandlerRequesterRejectsNilHandler(t *testing.T) {
 	if _, err := NewHandlerRequester[int, int](nil); !errors.Is(err, ErrNilDependency) {
 		t.Fatalf("constructor error=%v", err)

@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+// FR-MSG-03, FR-MSG-04
 func TestEnvelopeCopiesHeadersAndValidates(t *testing.T) {
 	envelope, err := NewEnvelope("events.created", 1)
 	if err != nil {
@@ -34,6 +35,7 @@ func TestEnvelopeCopiesHeadersAndValidates(t *testing.T) {
 	}
 }
 
+// FR-MSG-02
 func TestNewMessageIDIsUUIDv7String(t *testing.T) {
 	// The bubble's fake clock makes the embedded timestamp exact.
 	synctest.Test(t, func(t *testing.T) {
@@ -74,6 +76,7 @@ func TestNewMessageIDIsUUIDv7String(t *testing.T) {
 	})
 }
 
+// FR-MSG-03
 func TestNewEnvelopeInitializesValidMetadata(t *testing.T) {
 	envelope, err := NewEnvelope("events.created", "payload")
 	if err != nil {
@@ -91,6 +94,7 @@ func TestNewEnvelopeInitializesValidMetadata(t *testing.T) {
 	}
 }
 
+// FR-MSG-03
 func TestEnvelopeRejectsInvalidMetadata(t *testing.T) {
 	valid := Envelope[int]{
 		ID:      "0123456789abcdef0123456789abcdef",
@@ -131,6 +135,7 @@ func TestEnvelopeRejectsInvalidMetadata(t *testing.T) {
 	}
 }
 
+// FR-MSG-03
 func TestEnvelopeWithHeaderRejectsEmptyKey(t *testing.T) {
 	envelope, err := NewEnvelope("events.created", 1)
 	if err != nil {

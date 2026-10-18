@@ -17,7 +17,7 @@ import (
 // synctest bubble it costs no wall-clock time.
 const retryDelay = time.Second
 
-// FR-MSG-11, FR-MSG-13
+// FR-MSG-12, FR-MSG-13
 func TestBrokerAtLeastOnceRetriesUntilAck(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		broker := newBroker(t)
@@ -70,7 +70,7 @@ func TestBrokerAtLeastOnceRetriesUntilAck(t *testing.T) {
 	})
 }
 
-// FR-MSG-11
+// FR-MSG-12
 func TestBrokerAtLeastOnceRetriesAfterNack(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		broker := newBroker(t)
@@ -106,7 +106,7 @@ func TestBrokerAtLeastOnceRetriesAfterNack(t *testing.T) {
 	})
 }
 
-// FR-MSG-12
+// FR-MSG-14
 func TestBrokerAtMostOnceDoesNotRetryHandlerError(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		broker := newBroker(t)
@@ -132,7 +132,7 @@ func TestBrokerAtMostOnceDoesNotRetryHandlerError(t *testing.T) {
 	})
 }
 
-// FR-MSG-14
+// FR-MSG-16
 func TestBrokerAtLeastOnceRetryStopsOnCancel(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		broker := newBroker(t)
@@ -158,7 +158,7 @@ func TestBrokerAtLeastOnceRetryStopsOnCancel(t *testing.T) {
 	})
 }
 
-// FR-MSG-10
+// FR-MSG-11
 func TestBrokerRejectsDuplicateConsumer(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		broker := newBroker(t)
@@ -178,7 +178,7 @@ func TestBrokerRejectsDuplicateConsumer(t *testing.T) {
 	})
 }
 
-// FR-MSG-15
+// FR-MSG-17
 func TestBrokerFullConsumerBufferHonorsPublishContext(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		broker := newBroker(t)
@@ -223,7 +223,7 @@ func TestBrokerFullConsumerBufferHonorsPublishContext(t *testing.T) {
 	})
 }
 
-// FR-MSG-04
+// FR-MSG-15
 func TestBrokerDeliverySettlementIsOneShot(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		broker := newBroker(t)
@@ -253,7 +253,7 @@ func TestBrokerDeliverySettlementIsOneShot(t *testing.T) {
 	})
 }
 
-// FR-MSG-15
+// FR-MSG-16, FR-MSG-17
 func TestBrokerUnsubscribeUnblocksPublisher(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		broker := newBroker(t)
@@ -289,7 +289,7 @@ func TestBrokerUnsubscribeUnblocksPublisher(t *testing.T) {
 	})
 }
 
-// FR-MSG-16
+// FR-MSG-18
 func TestBrokerCloseIsIdempotentAndUnblocksSubscribers(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		broker := NewBroker[int](retryDelay)
@@ -315,7 +315,7 @@ func TestBrokerCloseIsIdempotentAndUnblocksSubscribers(t *testing.T) {
 	})
 }
 
-// FR-MSG-16
+// FR-MSG-18
 func TestBrokerCloseUnblocksPublisher(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		broker := NewBroker[int](retryDelay)
@@ -349,7 +349,7 @@ func TestBrokerCloseUnblocksPublisher(t *testing.T) {
 	})
 }
 
-// FR-MSG-17
+// FR-MSG-19
 func TestBrokerDeliversToConsumersInNameOrder(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		broker := newBroker(t)
@@ -419,7 +419,7 @@ func TestBrokerDeliversToConsumersInNameOrder(t *testing.T) {
 	})
 }
 
-// FR-MSG-02
+// FR-MSG-04
 func TestBrokerCopiesEnvelopeAtDeliveryBoundaries(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		broker := newBroker(t)
@@ -457,7 +457,7 @@ func TestBrokerCopiesEnvelopeAtDeliveryBoundaries(t *testing.T) {
 	})
 }
 
-// FR-MSG-01, FR-MSG-03
+// FR-MSG-03, FR-MSG-05, FR-MSG-06
 func TestBrokerValidatesInputs(t *testing.T) {
 	broker := newBroker(t)
 

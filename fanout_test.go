@@ -10,6 +10,7 @@ import (
 	"github.com/justusschock/go-concurrency"
 )
 
+// FR-MSG-09
 func TestFanoutCallsAllAndJoinsIndexedErrors(t *testing.T) {
 	first, second := errors.New("first"), errors.New("second")
 	var calls atomic.Int32
@@ -37,6 +38,7 @@ func TestFanoutCallsAllAndJoinsIndexedErrors(t *testing.T) {
 	}
 }
 
+// FR-MSG-04, FR-MSG-09
 func TestFanoutClonesEnvelopePerPublisher(t *testing.T) {
 	publishers := make([]Publisher[int], 2)
 	for index := range publishers {
@@ -69,6 +71,7 @@ func TestFanoutClonesEnvelopePerPublisher(t *testing.T) {
 	}
 }
 
+// FR-MSG-09
 func TestFanoutLimitsParallelPublishers(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		var current, maximum, calls atomic.Int32
@@ -114,6 +117,7 @@ func TestFanoutLimitsParallelPublishers(t *testing.T) {
 	})
 }
 
+// FR-MSG-09
 func TestFanoutStopsAdmittingAfterCancel(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		var calls atomic.Int32
@@ -151,6 +155,7 @@ func TestFanoutStopsAdmittingAfterCancel(t *testing.T) {
 	})
 }
 
+// FR-MSG-06, FR-MSG-09
 func TestFanoutRejectsInvalidConfiguration(t *testing.T) {
 	publisher := publisherFunc[int](func(context.Context, Envelope[int]) error { return nil })
 
@@ -165,6 +170,7 @@ func TestFanoutRejectsInvalidConfiguration(t *testing.T) {
 	}
 }
 
+// FR-MSG-09
 func TestFanoutValidatesBeforePublishing(t *testing.T) {
 	called := false
 	fanout, err := NewFanoutPublisher([]Publisher[int]{publisherFunc[int](func(context.Context, Envelope[int]) error {

@@ -6,6 +6,7 @@ import (
 	"testing"
 )
 
+// FR-MSG-07
 func TestAuthorizedPublisherDeniesBeforePublish(t *testing.T) {
 	denied := errors.New("denied")
 	called := false
@@ -35,6 +36,7 @@ func TestAuthorizedPublisherDeniesBeforePublish(t *testing.T) {
 	}
 }
 
+// FR-MSG-04, FR-MSG-07
 func TestAuthorizedPublisherCopiesBoundaryHeaders(t *testing.T) {
 	publisher, err := NewAuthorizedPublisher[int](
 		publisherFunc[int](func(_ context.Context, envelope Envelope[int]) error {
@@ -69,6 +71,7 @@ func TestAuthorizedPublisherCopiesBoundaryHeaders(t *testing.T) {
 	}
 }
 
+// FR-MSG-07
 func TestAuthorizedPublisherValidatesBeforeAuthorization(t *testing.T) {
 	called := false
 	publisher, err := NewAuthorizedPublisher[int](
@@ -88,6 +91,7 @@ func TestAuthorizedPublisherValidatesBeforeAuthorization(t *testing.T) {
 	}
 }
 
+// FR-MSG-08
 func TestAuthorizedSubscriberDeniesBeforeSubscribe(t *testing.T) {
 	denied := errors.New("denied")
 	called := false
@@ -117,6 +121,7 @@ func TestAuthorizedSubscriberDeniesBeforeSubscribe(t *testing.T) {
 	}
 }
 
+// FR-MSG-08
 func TestAuthorizedSubscriberValidatesBeforeAuthorization(t *testing.T) {
 	called := false
 	subscriber, err := NewAuthorizedSubscriber[int](
@@ -136,6 +141,7 @@ func TestAuthorizedSubscriberValidatesBeforeAuthorization(t *testing.T) {
 	}
 }
 
+// FR-MSG-06
 func TestAuthorizedSubscriberRejectsNilHandler(t *testing.T) {
 	subscriber, err := NewAuthorizedSubscriber[int](
 		subscriberFunc[int](func(context.Context, Subscription, Handler[int]) error { return nil }),
@@ -151,6 +157,7 @@ func TestAuthorizedSubscriberRejectsNilHandler(t *testing.T) {
 	}
 }
 
+// FR-MSG-06
 func TestAuthorizedConstructorsRejectNilDependencies(t *testing.T) {
 	authorizer := authorizerFunc(func(context.Context, AuthorizationRequest) error { return nil })
 	publisher := publisherFunc[int](func(context.Context, Envelope[int]) error { return nil })
