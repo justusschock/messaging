@@ -8,8 +8,19 @@ import (
 	"github.com/justusschock/go-messaging"
 )
 
+// Factory creates the publisher and subscriber under test, typically the same
+// adapter value, and an optional cleanup function that [Run] calls when it
+// finishes.
 type Factory func(t *testing.T) (messaging.Publisher[string], messaging.Subscriber[string], func())
 
+// Run verifies an at-least-once publish/subscribe round trip: the subscriber
+// receives and acknowledges the message with its ID, payload and headers
+// preserved, and Subscribe keeps running until its context ends.
+//
+// Publish and Subscribe share one context with a one-second deadline, so a
+// context-aware adapter fails the test instead of hanging it. Run publishes
+// the same envelope repeatedly until it is delivered, so adapters that
+// register subscriptions asynchronously need no test-only synchronization.
 func Run(t *testing.T, factory Factory) {
 	t.Helper()
 	publisher, subscriber, cleanup := factory(t)

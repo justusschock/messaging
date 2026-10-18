@@ -8,8 +8,12 @@ import (
 	"unicode"
 )
 
+// MessageID uniquely identifies a message.
 type MessageID string
 
+// NewMessageID returns a new canonical, lowercase UUIDv7 string: a Unix
+// millisecond timestamp followed by cryptographically random bits. IDs
+// generated later in time sort after earlier ones at millisecond precision.
 func NewMessageID() (MessageID, error) {
 	var uuid [16]byte
 	milliseconds := uint64(time.Now().UnixMilli())
@@ -27,6 +31,12 @@ func NewMessageID() (MessageID, error) {
 	return MessageID(fmt.Sprintf("%x-%x-%x-%x-%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:10], uuid[10:16])), nil
 }
 
+// Envelope is a message with metadata and a typed payload.
+//
+// Treat envelopes as values: use [Envelope.WithHeader] and [Envelope.Clone]
+// rather than mutating Headers of an envelope that has been shared. Every
+// helper in this module copies Headers at its boundaries. Payload is copied
+// with normal Go value semantics only.
 type Envelope[T any] struct {
 	ID      MessageID
 	Subject string
@@ -35,6 +45,9 @@ type Envelope[T any] struct {
 	Payload T
 }
 
+// NewEnvelope returns a valid envelope with a new [MessageID], the current UTC
+// time as SentAt and an empty header map. It returns an error wrapping
+// [ErrInvalidEnvelope] if subject is empty or contains whitespace.
 func NewEnvelope[T any](subject string, payload T) (Envelope[T], error) {
 	id, err := NewMessageID()
 	if err != nil {
@@ -53,6 +66,8 @@ func NewEnvelope[T any](subject string, payload T) (Envelope[T], error) {
 	return envelope, nil
 }
 
+// WithHeader returns a copy of the envelope with the header key set to value.
+// The receiver is not modified. An empty key yields [ErrInvalidEnvelope].
 func (envelope Envelope[T]) WithHeader(key, value string) (Envelope[T], error) {
 	with := envelope.Clone()
 	with.Headers[key] = value
@@ -62,11 +77,16 @@ func (envelope Envelope[T]) WithHeader(key, value string) (Envelope[T], error) {
 	return with, nil
 }
 
+// Clone returns a copy of the envelope with its own header map. The payload
+// is copied by value only.
 func (envelope Envelope[T]) Clone() Envelope[T] {
 	envelope.Headers = cloneHeaders(envelope.Headers)
 	return envelope
 }
 
+// Validate reports whether the envelope metadata is well-formed: a non-empty
+// ID, a non-empty subject without whitespace, a non-zero SentAt and no empty
+// header keys. Failures wrap [ErrInvalidEnvelope].
 func (envelope Envelope[T]) Validate() error {
 	switch {
 	case envelope.ID == "":

@@ -16,6 +16,13 @@ type consumer[T any] struct {
 	done         chan struct{}
 }
 
+// Broker is a bounded, process-local [messaging.Publisher] and
+// [messaging.Subscriber]. It is safe for concurrent use.
+//
+// Each consumer, identified by subject and consumer name, has a buffer of
+// Subscription.MaxInFlight envelopes. Publish delivers to the consumers of
+// the envelope's subject in consumer-name order and blocks while a consumer's
+// buffer is full. The broker never persists messages.
 type Broker[T any] struct {
 	mu         sync.RWMutex
 	consumers  map[string]map[string]*consumer[T]
@@ -23,6 +30,8 @@ type Broker[T any] struct {
 	closed     bool
 }
 
+// NewBroker returns an open broker. retryDelay is the pause before an
+// [messaging.AtLeastOnce] delivery that was not acknowledged is redelivered.
 func NewBroker[T any](retryDelay time.Duration) *Broker[T] {
 	return &Broker[T]{
 		consumers:  make(map[string]map[string]*consumer[T]),
@@ -30,6 +39,10 @@ func NewBroker[T any](retryDelay time.Duration) *Broker[T] {
 	}
 }
 
+// Publish validates the envelope and enqueues a clone for every current
+// consumer of its subject. It blocks while a consumer's buffer is full until
+// capacity frees up, the consumer leaves, or ctx ends (returning ctx.Err()).
+// It returns [messaging.ErrClosed] after [Broker.Close].
 func (broker *Broker[T]) Publish(ctx context.Context, envelope messaging.Envelope[T]) error {
 	if err := envelope.Validate(); err != nil {
 		return err
@@ -63,6 +76,16 @@ func (broker *Broker[T]) Publish(ctx context.Context, envelope messaging.Envelop
 	return nil
 }
 
+// Subscribe registers the consumer and runs handler for each delivery until
+// ctx ends (returning ctx.Err()) or the broker closes (returning
+// [messaging.ErrClosed]). It returns [messaging.ErrConsumerExists] if the
+// subject already has an active consumer with the same name.
+//
+// Under [messaging.AtMostOnce] the handler is called once per envelope and
+// its result is ignored. Under [messaging.AtLeastOnce] an attempt that is not
+// acknowledged (handler error, Nack, or no settlement) is retried after the
+// broker's retry delay with an incremented attempt number. Deliveries are
+// processed sequentially.
 func (broker *Broker[T]) Subscribe(ctx context.Context, subscription messaging.Subscription, handler messaging.Handler[T]) error {
 	if err := subscription.Validate(); err != nil {
 		return err
@@ -96,6 +119,10 @@ func (broker *Broker[T]) Subscribe(ctx context.Context, subscription messaging.S
 	}
 }
 
+// Close closes the broker, ending active subscriptions with
+// [messaging.ErrClosed] and waking blocked publishers. Later Publish and
+// Subscribe calls return [messaging.ErrClosed]. Close is idempotent and always
+// returns nil.
 func (broker *Broker[T]) Close() error {
 	broker.mu.Lock()
 	defer broker.mu.Unlock()

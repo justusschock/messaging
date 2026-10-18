@@ -8,11 +8,18 @@ import (
 	"github.com/justusschock/go-concurrency"
 )
 
+// FanoutPublisher is a [Publisher] that publishes each envelope to every
+// configured target with bounded parallelism. It is safe for concurrent use
+// if the targets are.
 type FanoutPublisher[T any] struct {
 	publishers  []Publisher[T]
 	maxParallel int
 }
 
+// NewFanoutPublisher returns a fan-out over a copy of publishers that runs at
+// most maxParallel targets at once. It returns [ErrNilDependency] if the list
+// is empty or contains nil, and an error wrapping
+// concurrency.ErrInvalidLimit if maxParallel is not positive.
 func NewFanoutPublisher[T any](publishers []Publisher[T], maxParallel int) (*FanoutPublisher[T], error) {
 	if len(publishers) == 0 {
 		return nil, fmt.Errorf("%w: publishers", ErrNilDependency)
@@ -30,6 +37,11 @@ func NewFanoutPublisher[T any](publishers []Publisher[T], maxParallel int) (*Fan
 	return &FanoutPublisher[T]{publishers: copyOfPublishers, maxParallel: maxParallel}, nil
 }
 
+// Publish validates the envelope and publishes a separate clone to every
+// target. A failing target does not stop the others. Target errors are
+// wrapped as "publisher N: ..." in input order and joined with
+// [errors.Join]. If ctx ends, targets not yet started are skipped and the
+// context's cause is returned.
 func (publisher *FanoutPublisher[T]) Publish(ctx context.Context, envelope Envelope[T]) error {
 	if err := envelope.Validate(); err != nil {
 		return err
